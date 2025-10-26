@@ -63,16 +63,255 @@
       .leaflet-popup-content {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       }
+
+      .controls-container {
+        padding: 30px;
+        background: white;
+      }
+
+      .controls-title {
+        font-size: 1.5em;
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 20px;
+      }
+
+      .metric-card {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+      }
+
+      .metric-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .metric-card.active {
+        border-color: #007bff;
+        background: #e7f3ff;
+      }
+
+      .metric-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .metric-checkbox {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+      }
+
+      .metric-label {
+        font-weight: 600;
+        font-size: 1.1em;
+        color: #333;
+        cursor: pointer;
+        flex: 1;
+      }
+
+      .metric-description {
+        color: #666;
+        font-size: 0.9em;
+        margin-bottom: 15px;
+      }
+
+      .coefficient-range {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .coefficient-range label {
+        font-size: 0.9em;
+        color: #555;
+        min-width: 40px;
+      }
+
+      .coefficient-range input {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+
+      .legend {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      .legend-title {
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+
+      .legend-scale {
+        display: flex;
+        height: 30px;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .legend-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 5px;
+        font-size: 0.9em;
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="header">
-        <p>Click on any country to view and assign coefficients</p>
+        <h1>Country Coefficient Map</h1>
+        <p>
+          Click on any country to view coefficients • Select metrics below to
+          assign coefficients automatically
+        </p>
       </div>
 
       <div class="map-container">
         <div id="map"></div>
+      </div>
+
+      <div class="controls-container">
+        <h2 class="controls-title">Coefficient Assignment Metrics</h2>
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <input
+                type="checkbox"
+                class="metric-checkbox"
+                id="gdp-per-capita"
+                onchange="handleMetricChange(this)"
+              />
+              <label class="metric-label" for="gdp-per-capita"
+                >GDP per Capita</label
+              >
+            </div>
+            <p class="metric-description">
+              Assign coefficients based on economic output per person
+            </p>
+            <div class="coefficient-range">
+              <label>Min:</label>
+              <input
+                type="number"
+                step="0.1"
+                value="0.5"
+                id="gdp-min"
+                disabled
+              />
+              <label>Max:</label>
+              <input
+                type="number"
+                step="0.1"
+                value="2.0"
+                id="gdp-max"
+                disabled
+              />
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-header">
+              <input
+                type="checkbox"
+                class="metric-checkbox"
+                id="area"
+                onchange="handleMetricChange(this)"
+              />
+              <label class="metric-label" for="area">Land Area</label>
+            </div>
+            <p class="metric-description">
+              Assign coefficients based on geographic size
+            </p>
+            <div class="coefficient-range">
+              <label>Min:</label>
+              <input
+                type="number"
+                step="0.1"
+                value="0.5"
+                id="area-min"
+                disabled
+              />
+              <label>Max:</label>
+              <input
+                type="number"
+                step="0.1"
+                value="2.0"
+                id="area-max"
+                disabled
+              />
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <input
+                type="checkbox"
+                class="metric-checkbox"
+                id="hdi"
+                onchange="handleMetricChange(this)"
+              />
+              <label class="metric-label" for="hdi"
+                >Human Development Index</label
+              >
+            </div>
+            <p class="metric-description">
+              Assign coefficients based on development indicators
+            </p>
+            <div class="coefficient-range">
+              <label>Min:</label>
+              <input
+                type="number"
+                step="0.1"
+                value="0.5"
+                id="hdi-min"
+                disabled
+              />
+              <label>Max:</label>
+              <input
+                type="number"
+                step="0.1"
+                value="2.0"
+                id="hdi-max"
+                disabled
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="legend">
+          <div class="legend-title">Coefficient Color Scale</div>
+          <div
+            class="legend-scale"
+            style="
+              background: linear-gradient(
+                to right,
+                rgb(100, 100, 255),
+                white,
+                rgb(255, 100, 100)
+              );
+            "
+          ></div>
+          <div class="legend-labels">
+            <span>Low (0.5)</span>
+            <span>Neutral (1.0)</span>
+            <span>High (2.0)</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -80,6 +319,133 @@
     <script>
       let countryData = {};
       let map, geojsonLayer;
+      let activeMetrics = new Set();
+
+      // Sample data for metrics (in real app, this would come from APIs)
+      const metricData = {
+        "gdp-per-capita": {
+          USA: 76398,
+          CHN: 12720,
+          JPN: 33815,
+          DEU: 48756,
+          GBR: 46371,
+          FRA: 43518,
+          IND: 2389,
+          ITA: 35551,
+          BRA: 9673,
+          CAN: 52051,
+          RUS: 12195,
+          KOR: 32661,
+          AUS: 64491,
+          ESP: 30103,
+          MEX: 10045,
+          IDN: 4788,
+          NLD: 57016,
+          SAU: 30447,
+          TUR: 10675,
+          CHE: 92434,
+          POL: 18282,
+          BEL: 51768,
+          SWE: 60239,
+          ARG: 13709,
+          NOR: 89090,
+          AUT: 53268,
+          NGA: 2184,
+          ARE: 48950,
+          ISR: 52170,
+          IRL: 99152,
+          DNK: 68394,
+          SGP: 72794,
+          MYS: 11993,
+          PHL: 3499,
+          VNM: 4163,
+          BGD: 2503,
+          EGY: 3876,
+          PAK: 1568,
+          ZAF: 6485,
+          COL: 6630,
+        },
+        area: {
+          RUS: 17098242,
+          CAN: 9984670,
+          USA: 9833517,
+          CHN: 9596961,
+          BRA: 8515767,
+          AUS: 7692024,
+          IND: 3287263,
+          ARG: 2780400,
+          KAZ: 2724900,
+          DZA: 2381741,
+          COD: 2344858,
+          SAU: 2149690,
+          MEX: 1964375,
+          IDN: 1904569,
+          LBY: 1759540,
+          IRN: 1648195,
+          MNG: 1564110,
+          PER: 1285216,
+          TCD: 1284000,
+          NER: 1267000,
+          DEU: 357114,
+          FRA: 643801,
+          ESP: 505990,
+          SWE: 450295,
+          NOR: 323802,
+          POL: 312696,
+          ITA: 301340,
+          GBR: 242495,
+          NLD: 41543,
+          BEL: 30528,
+          DNK: 42951,
+          CHE: 41284,
+          AUT: 83871,
+          IRL: 70273,
+          SGP: 733,
+          MLT: 316,
+        },
+        hdi: {
+          CHE: 0.962,
+          NOR: 0.961,
+          ISL: 0.959,
+          DNK: 0.948,
+          SWE: 0.947,
+          IRL: 0.945,
+          DEU: 0.942,
+          NLD: 0.941,
+          AUS: 0.938,
+          FIN: 0.94,
+          SGP: 0.939,
+          BEL: 0.937,
+          NZL: 0.937,
+          CAN: 0.936,
+          AUT: 0.916,
+          GBR: 0.929,
+          KOR: 0.925,
+          USA: 0.921,
+          JPN: 0.92,
+          ISR: 0.919,
+          FRA: 0.903,
+          ESP: 0.905,
+          ITA: 0.895,
+          POL: 0.876,
+          CHL: 0.855,
+          SAU: 0.875,
+          ARE: 0.911,
+          ARG: 0.842,
+          RUS: 0.822,
+          TUR: 0.838,
+          MEX: 0.758,
+          BRA: 0.754,
+          CHN: 0.768,
+          THA: 0.8,
+          IND: 0.633,
+          ZAF: 0.713,
+          NGA: 0.535,
+          PAK: 0.544,
+          BGD: 0.661,
+          ETH: 0.485,
+        },
+      };
 
       function initMap() {
         map = L.map("map").setView([20, 0], 2);
@@ -106,9 +472,12 @@
               feature.properties.ISO_A3 ||
               feature.id;
             const name = feature.properties.name || "Unknown";
-            console.log(name);
             if (code && name) {
-              countryData[code] = { name, coefficient: 1.0 };
+              countryData[code] = {
+                name,
+                coefficient: 1.0,
+                baseCoefficient: 1.0,
+              };
             }
           });
 
@@ -121,9 +490,28 @@
         }
       }
 
+      function getColor(coefficient) {
+        const normalized = (coefficient - 0.5) / 1.5;
+        if (coefficient < 1.0) {
+          const intensity = Math.round(255 * (1 - normalized * 2));
+          return `rgb(${intensity}, ${intensity}, 255)`;
+        } else {
+          const intensity = Math.round(255 * (1 - (normalized - 0.5) * 2));
+          return `rgb(255, ${intensity}, ${intensity})`;
+        }
+      }
+
       function styleCountry(feature) {
+        const code =
+          feature.properties.iso_a3 ||
+          feature.properties.id ||
+          feature.properties.ISO_A3 ||
+          feature.id;
+        const data = countryData[code];
+        const coefficient = data?.coefficient ?? 1.0;
+
         return {
-          fillColor: "#ffffff",
+          fillColor: getColor(coefficient),
           weight: 1,
           opacity: 1,
           color: "#666",
@@ -143,6 +531,7 @@
           click: () => showCountryInfo(layer, code, countryName),
         });
       }
+
       function showCountryInfo(layer, code, name) {
         const data = countryData[code];
         const coefficient = data?.coefficient ?? 1.0;
@@ -156,6 +545,91 @@
           )
           .openPopup();
       }
+
+      function handleMetricChange(checkbox) {
+        const metricId = checkbox.id;
+        const prefix = metricId.split("-")[0];
+        const minInput = document.getElementById(`${prefix}-min`);
+        const maxInput = document.getElementById(`${prefix}-max`);
+        const card = checkbox.closest(".metric-card");
+
+        if (checkbox.checked) {
+          activeMetrics.add(metricId);
+          minInput.disabled = false;
+          maxInput.disabled = false;
+          card.classList.add("active");
+        } else {
+          activeMetrics.delete(metricId);
+          minInput.disabled = true;
+          maxInput.disabled = true;
+          card.classList.remove("active");
+        }
+
+        updateCoefficients();
+      }
+
+      function updateCoefficients() {
+        Object.keys(countryData).forEach((code) => {
+          countryData[code].coefficient = countryData[code].baseCoefficient;
+        });
+
+        if (activeMetrics.size === 0) {
+          refreshMap();
+          return;
+        }
+
+        activeMetrics.forEach((metricId) => {
+          const prefix = metricId.split("-")[0];
+          const minCoef = parseFloat(
+            document.getElementById(`${prefix}-min`).value
+          );
+          const maxCoef = parseFloat(
+            document.getElementById(`${prefix}-max`).value
+          );
+          const data = metricData[metricId];
+
+          if (!data) return;
+
+          const values = Object.entries(data)
+            .map(([code, value]) => ({
+              code,
+              value,
+            }))
+            .filter((item) => countryData[item.code]);
+
+          if (values.length === 0) return;
+
+          values.sort((a, b) => a.value - b.value);
+
+          values.forEach((item, index) => {
+            const rank = index / (values.length - 1 || 1);
+            const coefficient = minCoef + (maxCoef - minCoef) * rank;
+
+            if (countryData[item.code]) {
+              const currentCoef = countryData[item.code].coefficient;
+              countryData[item.code].coefficient =
+                (currentCoef * (activeMetrics.size - 1) + coefficient) /
+                activeMetrics.size;
+            }
+          });
+        });
+        refreshMap();
+      }
+      function refreshMap() {
+        if (geojsonLayer) {
+          geojsonLayer.setStyle(styleCountry);
+        }
+      }
+      document.addEventListener("DOMContentLoaded", () => {
+        const inputs = document.querySelectorAll('input[type="number"]');
+        inputs.forEach((input) => {
+          input.addEventListener("change", () => {
+            if (!input.disabled) {
+              updateCoefficients();
+            }
+          });
+        });
+      });
       window.onload = initMap;
     </script>
   </body>
