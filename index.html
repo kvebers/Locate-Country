@@ -320,132 +320,71 @@
       let countryData = {};
       let map, geojsonLayer;
       let activeMetrics = new Set();
+      const metricData = {};
+      async function loadMetricData() {
+        await Promise.all([loadGDP(), loadArea(), loadHDI()]);
+        console.log("Metrics loaded:", metricData);
+      }
 
-      // Sample data for metrics (in real app, this would come from APIs)
-      const metricData = {
-        "gdp-per-capita": {
-          USA: 76398,
-          CHN: 12720,
-          JPN: 33815,
-          DEU: 48756,
-          GBR: 46371,
-          FRA: 43518,
-          IND: 2389,
-          ITA: 35551,
-          BRA: 9673,
-          CAN: 52051,
-          RUS: 12195,
-          KOR: 32661,
-          AUS: 64491,
-          ESP: 30103,
-          MEX: 10045,
-          IDN: 4788,
-          NLD: 57016,
-          SAU: 30447,
-          TUR: 10675,
-          CHE: 92434,
-          POL: 18282,
-          BEL: 51768,
-          SWE: 60239,
-          ARG: 13709,
-          NOR: 89090,
-          AUT: 53268,
-          NGA: 2184,
-          ARE: 48950,
-          ISR: 52170,
-          IRL: 99152,
-          DNK: 68394,
-          SGP: 72794,
-          MYS: 11993,
-          PHL: 3499,
-          VNM: 4163,
-          BGD: 2503,
-          EGY: 3876,
-          PAK: 1568,
-          ZAF: 6485,
-          COL: 6630,
-        },
-        area: {
-          RUS: 17098242,
-          CAN: 9984670,
-          USA: 9833517,
-          CHN: 9596961,
-          BRA: 8515767,
-          AUS: 7692024,
-          IND: 3287263,
-          ARG: 2780400,
-          KAZ: 2724900,
-          DZA: 2381741,
-          COD: 2344858,
-          SAU: 2149690,
-          MEX: 1964375,
-          IDN: 1904569,
-          LBY: 1759540,
-          IRN: 1648195,
-          MNG: 1564110,
-          PER: 1285216,
-          TCD: 1284000,
-          NER: 1267000,
-          DEU: 357114,
-          FRA: 643801,
-          ESP: 505990,
-          SWE: 450295,
-          NOR: 323802,
-          POL: 312696,
-          ITA: 301340,
-          GBR: 242495,
-          NLD: 41543,
-          BEL: 30528,
-          DNK: 42951,
-          CHE: 41284,
-          AUT: 83871,
-          IRL: 70273,
-          SGP: 733,
-          MLT: 316,
-        },
-        hdi: {
-          CHE: 0.962,
-          NOR: 0.961,
-          ISL: 0.959,
-          DNK: 0.948,
-          SWE: 0.947,
-          IRL: 0.945,
-          DEU: 0.942,
-          NLD: 0.941,
-          AUS: 0.938,
-          FIN: 0.94,
-          SGP: 0.939,
-          BEL: 0.937,
-          NZL: 0.937,
-          CAN: 0.936,
-          AUT: 0.916,
-          GBR: 0.929,
-          KOR: 0.925,
-          USA: 0.921,
-          JPN: 0.92,
-          ISR: 0.919,
-          FRA: 0.903,
-          ESP: 0.905,
-          ITA: 0.895,
-          POL: 0.876,
-          CHL: 0.855,
-          SAU: 0.875,
-          ARE: 0.911,
-          ARG: 0.842,
-          RUS: 0.822,
-          TUR: 0.838,
-          MEX: 0.758,
-          BRA: 0.754,
-          CHN: 0.768,
-          THA: 0.8,
-          IND: 0.633,
-          ZAF: 0.713,
-          NGA: 0.535,
-          PAK: 0.544,
-          BGD: 0.661,
-          ETH: 0.485,
-        },
-      };
+      async function loadGDP() {
+        const url =
+          "https://api.worldbank.org/v2/country/all/indicator/NY.GDP.PCAP.CD?format=json&date=2022&per_page=400";
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!Array.isArray(data) || !Array.isArray(data[1])) {
+          console.error("Unexpected GDP data format", data);
+          return;
+        }
+
+        metricData["gdp-per-capita"] = {};
+
+        data[1].forEach((item) => {
+          const code = item.country?.id;
+          const value = item.value;
+          if (/^[A-Z]{3}$/.test(code) && value) {
+            metricData["gdp-per-capita"][code] = value;
+          }
+        });
+      }
+
+      async function loadArea() {
+        const res = await fetch(
+          "https://restcountries.com/v3.1/all?fields=cca3,area"
+        );
+        const data = await res.json();
+        if (!Array.isArray(data)) {
+          console.error("Unexpected REST Countries result", data);
+          return;
+        }
+        metricData["area"] = {};
+        data.forEach((country) => {
+          const code = country.cca3;
+          const value = country.area;
+          if (code && value) metricData["area"][code] = value;
+        });
+      }
+
+      async function loadHDI() {
+        const url =
+          "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world_HDI.csv";
+        try {
+          const res = await fetch(url);
+          const text = await res.text();
+          const rows = text.split("\n").slice(1);
+          metricData["hdi"] = {};
+
+          rows.forEach((row) => {
+            const [country, iso3, hdiStr] = row.split(",");
+            const hdi = parseFloat(hdiStr);
+            if (/^[A-Z]{3}$/.test(iso3) && !isNaN(hdi)) {
+              metricData["hdi"][iso3] = hdi;
+            }
+          });
+        } catch (error) {
+          console.error("Failed to load HDI data:", error);
+        }
+      }
 
       function initMap() {
         map = L.map("map").setView([20, 0], 2);
@@ -630,7 +569,10 @@
           });
         });
       });
-      window.onload = initMap;
+      window.onload = async () => {
+        await initMap();
+        await loadMetricData();
+      };
     </script>
   </body>
 </html>
